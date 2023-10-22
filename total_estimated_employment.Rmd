@@ -45,8 +45,6 @@ full_dataset_url <- "https://openafrica.net/dataset/2a48a420-6f35-465b-9362-5d78
 #read the CSV data from the full URL
 emp_data <- read_csv(full_dataset_url)
 
-head(emp_data)
-
 ```
 
 ```{r}
