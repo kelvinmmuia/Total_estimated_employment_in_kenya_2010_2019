@@ -3,9 +3,9 @@ title: "Total Estimated Employment in Kenya (2010-2019)"
 author: "Kelvin Mwaka Muia"
 date: "2023-10-22"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
-  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -121,7 +121,7 @@ TEEK_10_19_col <- emp_data_long %>%
   geom_col() +
   labs(
     title = "Total Estimated Employment in Kenya (2010-2019)",
-    x = "Category",
+    x = "Employment category",
     y = "Total Employed",
     fill = "",
     caption = "Data Source:\n https://open.africa/dataset/kenya-economic-survey-report-2020/resource/ca3a9073-e1f5-4c22-86bc-ae76cd1087f3",
