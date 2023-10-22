@@ -1,0 +1,161 @@
+---
+title: "Total Estimated Employment in Kenya (2010-2019)"
+author: "Kelvin Mwaka Muia"
+date: "2023-10-22"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE
+                      )
+library(tidyverse)
+library(ggpubr)
+library(forcats)
+library(readr)
+theme_set(theme_pubr() + theme(
+  axis.text.x=element_text(angle=0,vjust=0.5,hjust=0.5,size=7),
+  axis.title.x = element_text(size = 9, face = "bold"),
+  axis.title.y = element_text(size = 9, face="bold"),
+  legend.text = element_text(size = 8, face = "italic"),
+  legend.position = "bottom",
+  legend.direction = "vertical",
+  legend.title = element_text(size = 8),
+  plot.caption = element_text(size = 8),
+  plot.caption.position = "plot",
+  plot.tag = element_text(size = 8),
+  plot.tag.position = "bottomleft",
+  plot.title = element_text(size = 11,face = "bold", hjust = 0.5)))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis",
+  scipen = 999
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_color_continuous = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+
+#define the dataset's URL
+full_dataset_url <- "https://openafrica.net/dataset/2a48a420-6f35-465b-9362-5d78e1d579ce/resource/ca3a9073-e1f5-4c22-86bc-ae76cd1087f3/download/total-estimated-employment.csv"
+
+#read the CSV data from the full URL
+emp_data <- read_csv(full_dataset_url)
+
+head(emp_data)
+
+```
+
+```{r}
+
+emp_data_long <- pivot_longer(emp_data, 
+  cols = -`Total Estimated Employment ('000)`,  # The first column with category names
+  names_to = "Year",
+  values_to = "Value")%>% 
+  mutate(Year = as.numeric(Year))
+
+colnames(emp_data_long) <- c("Category", "Year", "Number")
+emp_data_long <- emp_data_long |> 
+  mutate(Year=factor(Year),
+         Category=factor(Category))
+
+head(emp_data_long)
+```
+
+
+
+
+
+
+```{r}
+TEEK_10_19_smooth <- ggplot(emp_data_long, aes(x = as.numeric(Year), y = Number, 
+                          color = Category)) +
+  geom_point(size = 1.5, alpha=0.7) +
+  geom_smooth(method = "loess", se = FALSE) +
+  labs(
+    title = "Total Estimated Employment in Kenya (2010-2019)",
+    x = "Year",
+    y = "Total estimated employment ('000)",
+    color = "Employment category",
+    caption = "Data Source:\n https://open.africa/dataset/kenya-economic-survey-report-2020/resource/ca3a9073-e1f5-4c22-86bc-ae76cd1087f3",
+    tag = "Kelvin MM") +
+  scale_x_continuous(breaks = unique(as.numeric(emp_data_long$Year)), 
+                     labels = unique(emp_data_long$Year))
+
+TEEK_10_19_smooth
+
+ggsave("plots/TEEK_10_19_smooth.pdf", TEEK_10_19_smooth, 
+       width = 12, height = 8)
+```
+       
+```{r}
+# Calculate the percentage of the total for each category and year
+TEEK_10_19_bar<- emp_data_long %>%
+  group_by(Year) %>%
+  mutate(Percentage = Number / sum(Number) * 100) %>%
+  ggplot(aes(x = Year, y = Percentage, 
+                            fill = Category)) +
+  geom_bar(stat = "identity", alpha=0.7) +
+  labs(
+    title = "Percentage of Total Estimated Employment in Kenya (2010-2019)",
+    x = "Year",
+    y = "Percentage of total employed",
+    fill = "Employment category",
+    caption = "Data Source:\n https://open.africa/dataset/kenya-economic-survey-report-2020/resource/ca3a9073-e1f5-4c22-86bc-ae76cd1087f3",
+    tag = "Kelvin MM"
+  ) +
+  scale_fill_discrete() +
+  scale_y_continuous(labels = scales::percent_format(scale = 1))
+TEEK_10_19_bar
+ggsave("plots/TEEK_10_19_bar.pdf", TEEK_10_19_bar, 
+       width = 12, height = 8)
+```
+      
+```{r}
+TEEK_10_19_col <- emp_data_long %>%
+  group_by(Year, Category) %>%
+  summarise(TotalEmployment = sum(Number)) %>%
+  ggplot(aes(x = fct_reorder2(Category, Year, TotalEmployment), 
+             y = TotalEmployment, fill = Category))+
+  geom_col() +
+  labs(
+    title = "Total Estimated Employment in Kenya (2010-2019)",
+    x = "Category",
+    y = "Total Employed",
+    fill = "",
+    caption = "Data Source:\n https://open.africa/dataset/kenya-economic-survey-report-2020/resource/ca3a9073-e1f5-4c22-86bc-ae76cd1087f3",
+    tag = "Kelvin MM"
+  ) + theme(legend.position = "none")
+TEEK_10_19_col
+ggsave("plots/TEEK_10_19_col.pdf", TEEK_10_19_col, 
+       width = 12, height = 8)
+```
+      
+```{r}
+TEEK_10_19_facet <- emp_data_long %>%
+  group_by(Year, Category) %>%
+  summarise(TotalEmployment = sum(Number)) %>%
+  ggplot(aes(x = fct_reorder2(Category, Year, TotalEmployment), 
+             y = TotalEmployment, fill = Category)) +
+  geom_col() +
+  facet_grid(~Year) +
+  labs(
+    title = "Total Estimated Employment in Kenya (2010-2019)",
+    x = "Employment category", 
+    y = "Total employed",
+    fill = "",
+    caption = "Data Source:\n https://open.africa/dataset/kenya-economic-survey-report-2020/resource/ca3a9073-e1f5-4c22-86bc-ae76cd1087f3",
+    tag = "Kelvin MM"
+  ) +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
+TEEK_10_19_facet
+ggsave("plots/TEEK_10_19_facet.pdf", TEEK_10_19_facet, 
+       width = 12, height = 8)
+```
+
+
+
+
