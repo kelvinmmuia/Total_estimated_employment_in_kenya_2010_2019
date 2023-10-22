@@ -3,9 +3,9 @@ title: "Total Estimated Employment in Kenya (2010-2019)"
 author: "Kelvin Mwaka Muia"
 date: "2023-10-22"
 output:
-  pdf_document: default
   html_document:
     df_print: paged
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
